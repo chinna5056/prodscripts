@@ -1,0 +1,44 @@
+#!/bin/bash
+cat /dev/null > .decrypt.sh
+cat /dev/null > .zip.sh
+if [ "$1" == e ]
+then
+        read -rp "Please Provide the files located path: " path
+        read -rp "Please Provide the key for Encryption: " key
+        read -rp "Please Enter the Encryption Type: " type
+                if [ "$type" == gpg ]
+                        then
+                                for file in $(cat .files.txt)
+                                do
+                                        gpg --openpgp -r "$key" --out "$path"/"$file".gpg --encrypt "$path"/"$file"
+                                        echo -e "\e[0;33m$(ls -lhd "$path"/"$file"*)\e[0m"
+                                done
+                elif [ "$type" == pgp ]
+                        then
+                                for file in $(cat .files.txt)
+                                do
+                                        gpg --openpgp -r "$key" --out "$path"/"$file".pgp --encrypt "$path"/"$file"
+                                        echo -e "\e[0;33m$(ls -lhd "$path"/"$file"*)\e[0m"
+                                done
+                echo -e "\e[0;32mEncryption Completed\e[0m"
+                fi
+elif [ "$1" == d ]
+then
+        read -rp "Please Provide the files located path: " path
+        cat .files.txt | sed 's/\.[^.]*$//' > .outputfile.txt
+        paste .files.txt .outputfile.txt|while read -r file out
+        do
+#               gpg --openpgp --out "$path"/"$out" --decrypt "$path"/"$file"
+             echo "gpg --openpgp --out "$path"/"$out" --decrypt "$path"/"$file"" >> .decrypt.sh
+        done
+        echo -e "\e[0;32mDecryption Completed\e[0m"
+elif [ "$1" == z ]
+then
+        read -rp "Please Provide the files located path: " path
+        cat .files.txt | sed 's/\.[^.]*$//' > .outputfile.txt
+        paste .files.txt .outputfile.txt|while read -r file out
+                do
+                        echo "zip "$path"/"$out".zip "$path"/"$file"" >> .zip.sh
+                        echo -e "\e[0;32m$file zipped\e[0m"
+                done
+fi
