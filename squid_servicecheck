@@ -1,0 +1,22 @@
+#!/bin/bash
+
+#variables
+user="kernvm"
+passwd="Vamsi5056$"
+server="servers.txt"
+service="squid"
+
+for server in `cat "$server"`
+do
+timeout 5 sshpass -p "$passwd" ssh -l "$user" "$server" "exit"
+        if [ $? == 0 ]
+        then
+                echo -e "\e[0;32mServer is Active\e[0m"
+                sshpass -p "$passwd" ssh -l "$user" "$server" "sudo service squid status|grep -w Active"
+                echo
+        else
+                echo -e "\e[0;31mServer not working\e[0m $server" >> squid_failedservers.txt
+                echo -e "\e[0;31mServer not working\e[0m"
+                echo
+        fi
+done
