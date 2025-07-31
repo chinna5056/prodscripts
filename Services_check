@@ -1,0 +1,48 @@
+#!/bin/bash
+
+read -sr pass
+passwd=`echo -n "$pass"|base64`
+OG=`cat password`
+if [ "echo $passwd" == "echo $OG" ]
+then
+#Variables
+
+read -p "Please enter Server IP: " server
+
+#Check RC serers services status
+
+if [ $1 == rc ]
+then
+echo "Server - $server"
+sendmail=`sshpass -p "Vamsi5056$" ssh -l kernvm $server "sudo service sendmail status|grep Active"`
+httpd=`sshpass -p "Vamsi5056$" ssh -l kernvm $server "sudo service httpd status|grep Active"`
+sendmail_opt=`echo $sendmail|grep Active|awk '{print $3}'|tail -c +2|head -c -1`
+httpd_opt=`echo $httpd |grep Active|awk '{print $3}'|tail -c +2|head -c -1`
+        if [ $sendmail_opt == running ]
+        then
+                echo "Sendmail is running in $server"
+        else
+                echo "Sendmail is not running in $server"
+        fi
+        if [ $httpd_opt == running ]
+        then
+                echo "HTTPD is running in $server"
+        else
+                echo "HTTPD is not running in $server"
+        fi
+elif [ $1 == pmta ]
+then
+echo "Server - $server"
+pmta=`sshpass -p "Vamsi5056$" ssh -l kernvm $server "sudo service pmta status"`
+pmta_opt=`echo $pmta|grep Active|awk '{print $3}'`
+        if [ $pmta_opt == running ]
+        then
+                echo "PMTA is running in $server"
+        else
+                echo "PMTA is not running in $server"
+        fi
+fi
+else
+        echo -e "\e[0;33m2 Step Verification FAILED\e[0m"
+        who am i >> black_user.log
+fi
