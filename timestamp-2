@@ -1,0 +1,19 @@
+#!/bin/bash
+read -sr pass
+passwd=`echo -n "$pass"|base64`
+OG=`cat password`
+if [ "echo $passwd" == "echo $OG" ]
+then
+        for server in `cat servers`
+        do
+                verision=`sshpass -p "Vamsi5056$" ssh -l kernvm $server ". /etc/os-release; echo "VERSION_ID""`
+                echo "Server IP: $server"
+                date=`date +"%Y-%m-%d"`
+                tim=`date +"%T"`
+                sshpass -p "Vamsi5056$" ssh -l kernvm $server "sudo timedatectl set-ntp false; sudo timedatectl set-time '"$date" "$tim"'; sudo timedatectl set-ntp true;date"
+                echo
+        done
+else
+        echo -e "\e[0;31m2 Step Verification FAILED\e[0m"
+        who am i >> black_user.log
+fi
