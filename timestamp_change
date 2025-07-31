@@ -1,0 +1,28 @@
+#!/bin/bash
+read -sr pass
+passwd=`echo -n "$pass"|base64`
+OG=`cat password`
+if [ "echo $passwd" == "echo $OG" ]
+then
+for server in $(cat servers)
+do
+                os=$(sshpass -p "Vamsi5056$" ssh -l kernvm "$server" "awk '{print $3}' /etc/redhat-release|cut -d "." -f 1")
+        if [ "$os" -gt 6 ]
+                then
+                        echo "Version=7.x"
+#               verision=`sshpass -p "Vamsi5056$"  ssh -l kernvm $server ". /etc/os-release; echo "VERSION_ID""`
+                        date=$(date +"%Y-%m-%d")
+                        tim=$(date +"%T")
+                        sshpass -p "Vamsi5056$" ssh -l kernvm "$server" "sudo timedatectl set-ntp false; sudo timedatectl set-time '""$date"" ""$tim""'; sudo timedatectl set-ntp true;date"
+        elif [ "$os" == 6 ]
+        then
+                        echo "Version=6.x"
+                        sshpass -p "Vamsi5056$" ssh -l kernvm "$server" "sudo service ntpd restart; date"
+        else
+                        echo "Please add servers in servers file"
+        fi
+done
+else
+        echo -e "\e[0;33m2 Step Verification FAILED\e[0m"
+        who am i >> black_user.log
+fi
