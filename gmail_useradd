@@ -1,0 +1,23 @@
+#!/bin/bash
+
+read -sr pass
+passwd=`echo -n "$pass"|base64`
+OG=`cat password`
+if [ "echo $passwd" == "echo $OG" ]
+then
+#variables
+user="gizmodo"
+passwd="Gmail@#$123"
+grp=pmta
+src=servers.txt
+
+        for server in `cat servers.txt`
+        do
+                echo "$server"
+                sshpass -p "Vamsi5056$" ssh -l kernvm "$server" "sudo useradd $user;sudo usermod -G $grp $user; echo "$passwd"|sudo passwd --stdin "$user""
+                sshpass -p "$passwd" ssh -l "$user" "$server" "pmta show topq"
+        done
+else
+        echo -e "\e[0;33m2 Step Verification FAILED\e[0m"
+        who am i >> black_user.log
+fi
