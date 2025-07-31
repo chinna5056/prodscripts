@@ -1,0 +1,69 @@
+#!/bin/bash
+
+read -sr pass
+passwd=`echo -n "$pass"|base64`
+OG=`cat password`
+if [ "echo $passwd" == "echo $OG" ]
+then
+#Null the file before generating new
+>"fdnsspf.txt"
+
+# Define Variabes
+#read -p "Enter the domain name: " DOMAIN
+#read -p "Enter the ips: " IPS
+
+#Separating Domains and IP's
+awk '{print $1}' iplist > domainlist
+awk '{ $1=""; sub(/^ /, ""); print }' iplist > ips.txt
+
+if [[ $(wc -l < domainlist) -ne $(wc -l < ips.txt) ]]
+then
+        echo ""
+        echo -e "\e[0;32mBoth files are not Equal Please check it once\e[0m"
+        echo ""
+else
+        paste ips.txt domainlist|while read -r IPS DOMAIN
+    do
+
+#Define domain and IPs
+>vertical.txt
+OUTPUT_FILE="fdnsspf.txt"
+
+#Extract first 3 letters of domain
+DOMAIN_PREFIX=${DOMAIN:4:3}
+
+#Convert IPs to vertical order, remove commas, and sort
+VERTICAL_IPS=$(echo "$IPS" | tr ',' '\n' | sort -n -t '.' -k 1,1 -k 2,2 -k 3,3 -k 4,4)
+#Print vertical IPs
+echo "$VERTICAL_IPS" >> vertical.txt
+
+#Generate FDNS records
+echo "$DOMAIN" >> "$OUTPUT_FILE"
+for IP in `cat vertical.txt`; do
+  # Extract 4th octet of IP
+  IP_OCTET=${IP##*.}
+  # Generate FDNS record
+  FDNS_RECORD="${IP} IN PTR ${DOMAIN_PREFIX}${IP_OCTET}.${DOMAIN}."
+  echo "$FDNS_RECORD" >> "$OUTPUT_FILE"
+done
+
+#Generate SPF record
+#echo -e "\nSPF Record:" >> "$OUTPUT_FILE"
+SPF_RECORD="v=spf1"
+for IP in `cat vertical.txt`; do
+  SPF_RECORD+=" ip4:${IP}/32"
+done
+SPF_RECORD+=" a mx ~all"
+echo "$SPF_RECORD" >> "$OUTPUT_FILE"
+echo "" >> "$OUTPUT_FILE"
+#echo "DNS records have been generated in $OUTPUT_FILE"
+        done
+fi
+
+#show the final content
+cat "fdnsspf.txt"
+
+else
+        echo -e "\e[0;33m2 Step Verification FAILED\e[0m"
+        who am i >> black_user.log
+fi
