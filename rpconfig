@@ -1,0 +1,18 @@
+#!/bin/bash
+
+read -sr pass
+passwd=`echo -n "$pass"|base64`
+OG=`cat password`
+if [ "echo $passwd" == "echo $OG" ]
+then
+        for a in `awk '{print $1}' rplist`
+        do
+                i=$(grep -w $a rplist|awk '{print $2}')
+                        echo -e "\e[0;32m$a \tsmtp:["$i"]\e[0m"
+                sshpass -p "Vamsi5056$" ssh -l kernvm $i "sudo sh /root/admin-scripts/RP/response-test.sh $a"
+                        echo
+        done
+else
+        echo -e "\e[0;33m2 Step Verification FAILED\e[0m"
+        who am i >> black_user.log
+fi
