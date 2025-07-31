@@ -1,0 +1,50 @@
+#!/bin/bash
+
+read -sr pass
+passwd=`echo -n "$pass"|base64`
+OG=`cat password`
+if [ "echo $passwd" == "echo $OG" ]
+then
+read -rp "Please enter the server IP: " server
+read -rp "Please select the server type [PMTA RC RP]: " type
+
+if [ "$type" == PMTA ]
+then
+        state=`sshpass -p "Vamsi5056$" ssh -l kernvm $server "sudo service pmta status|grep Active"|awk '{print $2}'`
+        if [ $state == active ]
+        then
+                echo -e "\e[0;32mservice running fine\e[0m"
+                sshpass -p "Vamsi5056$" ssh -l kernvm $server "sudo service pmta status|grep Active"
+        else
+                echo -e "\e[0;31mService not running, restarting now\e[0m"
+                sshpass -p "Vamsi5056$" ssh -l kernvm $server "sudo service pmta restart"
+                echo "Service state"
+                result=`sshpass -p "Vamsi5056$" ssh -l kernvm $server "sudo service pmta status|grep Active"`
+                echo -e "\e[0;32$result\e[0m"
+        fi
+
+elif [ $type == RC ]
+then
+        state=`sshpass -p "Vamsi5056$" ssh -l kernvm $server "sudo service sendmail status|grep Active"|awk '{print $2}'`
+        if [ $state == active ]
+        then
+                echo -e "\e[0;32mservice running fine\e[0m"
+                sshpass -p "Vamsi5056$" ssh -l kernvm $server "sudo service sendmail status|grep Active; sudo service httpd status|grep Active"
+        else
+                echo -e "\e[0;31mService not running, restarting now\e[0m"
+        sshpass -p "Vamsi5056$" ssh -l kernvm $server "sudo service sendmail restart"
+        sshpass -p "Vamsi5056$" ssh -l kernvm $server "sudo service httpd restart"
+        echo "sendmail Service state"
+        sshpass -p "Vamsi5056$" ssh -l kernvm $server "sudo service sendmail status|grep Active"
+        echo "httpd Service state"
+        sshpass -p "Vamsi5056$" ssh -l kernvm $server "sudo service httpd status|grep Active"
+        fi
+
+elif [ $type == RP ]
+then
+        sshpass -p "Vamsi5056$" ssh -l kernvm $server "sudo qmailctl restart;sudo svscanboot"
+fi
+else
+        echo -e "\e[0;33m2 Step Verification FAILED\e[0m"
+        who am i >> black_user.log
+fi
