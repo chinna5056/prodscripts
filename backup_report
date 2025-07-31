@@ -1,0 +1,36 @@
+#!/bin/bash
+
+cat /dev/null > /home/vmattaparthi/scripts/success.txt
+cat /dev/null > /home/vmattaparthi/scripts/pmta_backupissueservers.csv
+
+#variables
+#date=17Dec24
+#date=$(date -d "yesterday" +"%d%b%y")
+date=$(date -d "2 days ago" +"%d%b%y")
+RC_Path=/home/s3bucket/respcapservers
+PMTA_Path=/home/s3bucket/powermtaservers
+RP_Path=/home/s3bucket/respprocservers
+OUTPUT_File=/home/vmattaparthi/scripts/pmta_backupissueservers.csv
+SUCCESS_File=/home/vmattaparthi/scripts/success.txt
+MAIL=vmattaparthi@zetaglobal.com
+LOGFILE=/home/vmattaparthi/scripts/error.log
+
+echo "SERVER,LATEST BACKUP FILE" > "$OUTPUT_File"
+
+#Checking PMTA servers Backup
+for server in `cat /home/vmattaparthi/scripts/pmtaserver.txt`
+do
+        LATEST_File=$(ls -rth $PMTA_Path/server_$server/|tail -1) 2> "$LOGFILE"
+        ls -ld "$PMTA_Path"/server_"$server"/"$server"-"$date"* 2> "$LOGFILE" >/dev/null
+        if [ $? -eq 0 ]
+        then
+                echo "$server server backup Upto Date" >> "$SUCCESS_File"
+        else
+                echo ""$server","$LATEST_File"">> "$OUTPUT_File"
+        fi
+done
+
+#send the report
+
+echo "Please find the attached latest backup report." | mailx -a "$OUTPUT_File" -s "Latest Backup Report - "$date"" "$MAIL"
+
