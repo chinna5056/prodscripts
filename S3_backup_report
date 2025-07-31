@@ -1,0 +1,109 @@
+#!/bin/bash
+
+#variables
+date=17Dec24
+RC_Path=/home/s3bucket/respcapservers
+PMTA_Path=/home/s3bucket/powermtaservers
+RP_Path=/home/s3bucket/respprocservers
+
+
+#Checking RC servers Backup
+for server in `cat rcservers.txt`
+do
+        ls -ld $RC_Path/server_$server/$server-$date* 2> /dev/null >/dev/null
+        if [ $? -eq 0 ]
+        then
+                echo "$server server backup Upto Date" >> success.txt
+        else
+                report=$(ls -rth $RC_Path/server_$server/|tail -1)
+                echo $server >> failed_RC_servers.txt
+        fi
+	
+	
+#Creating RC html file
+(
+echo -e '<html> \n<table style="background-color:white;"> \n<tr style="background-color:blue;color:white;"> \n<th>Serial No.</th><th>Server IP</th><th>Last Backup</th><th>Last backup</th>'
+for fail_server in $(cat failedservers.txt)
+do
+echo -e "</tr> \n<tr> \n<td></td><td>"$fail_server"</td><td>"$date"</td><td>"$report"</td>"
+done
+echo -e '</tr> \n</table> \n</html>'
+) > rcservers_info.html
+done
+
+#Checking RP servers Backup
+for server in `cat /root/rpservers.txt`
+do
+        ls -ld $RP_Path/server_$server/$date* 2> /dev/null >/dev/null
+        if [ $? -eq 0 ]
+        then
+                echo "$server server backup Upto Date" >> success.txt
+        else
+                report=$(ls -rth $RP_Path/server_$server/|tail -1)
+                echo $server >> failed_RP_servers.txt
+        fi
+		
+		
+#Creating RP html file
+(
+echo -e '<html> \n<table style="background-color:white;"> \n<tr style="background-color:blue;color:white;"> \n<th>Serial No.</th><th>Server IP</th><th>Last Backup</th><th>Last backup</th>'
+for fail_server in $(cat failedservers.txt)
+do
+echo -e "</tr> \n<tr> \n<td></td><td>"$fail_server"</td><td>"$date"</td><td>"$report"</td>"
+done
+echo -e '</tr> \n</table> \n</html>'
+) > rpservers_info.html
+done
+
+#Checking PMTA servers Backup
+for server in `cat /root/pmtaservers.txt`
+do
+        ls -ld $PMTA_Path/server_$server/$date* 2> /dev/null >/dev/null
+        if [ $? -eq 0 ]
+        then
+                echo "$server server backup Upto Date" >> success.txt
+        else
+                report=$(ls -rth $RP_Path/server_$server/|tail -1)
+                echo $server >> failed_PMTA_servers.txt
+        fi
+		
+		
+#Creating PMTA html file
+(
+echo -e '<html> \n<table style="background-color:white;"> \n<tr style="background-color:blue;color:white;"> \n<th>Serial No.</th><th>Server IP</th><th>Last Backup</th><th>Last backup</th>'
+for fail_server in $(cat failedservers.txt)
+do
+echo -e "</tr> \n<tr> \n<td></td><td>"$fail_server"</td><td>"$date"</td><td>"$report"</td>"
+done
+echo -e '</tr> \n</table> \n</html>'
+) > pmtaservers_info.html
+done
+
+
+#sendmail to team
+(
+echo "To: noc@backup.alertnotify.info"
+echo "Subject: PMTA servers backup failed details"
+echo "MIME-Version: 1.0"
+echo "Content-Type: text/html"
+echo
+cat pmtaservers_info.html
+) | sendmail -t
+
+(
+echo "To: noc@backup.alertnotify.info"
+echo "Subject: RC servers backup failed details"
+echo "MIME-Version: 1.0"
+echo "Content-Type: text/html"
+echo
+cat rcservers_info.html
+) | sendmail -t
+
+(
+echo "To: noc@backup.alertnotify.info"
+echo "Subject: RP servers backup failed details"
+echo "MIME-Version: 1.0"
+echo "Content-Type: text/html"
+echo
+cat rpservers_info.html
+) | sendmail -t
